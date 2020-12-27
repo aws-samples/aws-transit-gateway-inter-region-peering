@@ -1,0 +1,22 @@
+{
+  "us-east-1": {
+    "CidrMask": 18,
+    "OnPremCidr": "172.16.0.0/16",
+    "DevelopmentCidr": "10.1.0.0/16",
+    "ProductionCidr": "10.2.0.0/16",
+    "AmazonSideAsn": 65001,
+    "CustomerSideAsn": 65501,
+    "PeerDevelopmentCidr": "10.3.0.0/16",
+    "PeerProductionCidr": "10.4.0.0/16"
+  },
+  "eu-west-1": {
+    "CidrMask": 18,
+    "OnPremCidr": "172.17.0.0/16",
+    "DevelopmentCidr": "10.3.0.0/16",
+    "ProductionCidr": "10.4.0.0/16",
+    "AmazonSideAsn": 65002,
+    "CustomerSideAsn": 65502,
+    "PeerDevelopmentCidr": "10.1.0.0/16",
+    "PeerProductionCidr": "10.2.0.0/16"
+  }
+}
