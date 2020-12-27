@@ -1,3 +1,6 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
 // Global network stack
 import * as cdk from "@aws-cdk/core";
 import {Construct, StackProps} from "@aws-cdk/core";
@@ -9,7 +12,7 @@ export class GlobalNetworkStack extends cdk.Stack {
         super(scope, id, props);
 
         const cfnGlobalNetwork = new networkManager.CfnGlobalNetwork(this, "GlobalNetwork", {
-            description: "Global network for the Transit Gateway powered network segmentation"
+            description: "Global network for the Transit Gateway powered inter-region peering"
         });
 
         new networkManager.CfnTransitGatewayRegistration(this, "RegisterTGW1", {
@@ -25,10 +28,10 @@ export class GlobalNetworkStack extends cdk.Stack {
 
 const app = new cdk.App();
 
-new GlobalNetworkStack(app, 'NetworkSegmentationGlobalManager',
+new GlobalNetworkStack(app, 'TransitGatewayPeeringGlobalManager',
     {
         env: {
             region: process.env.AWS_DEFAULT_REGION
         },
-        description: "Builds the global network for the Network Segmentation Demo"
+        description: "Builds the global network for the Transit Gateway Peering Demo"
     },);

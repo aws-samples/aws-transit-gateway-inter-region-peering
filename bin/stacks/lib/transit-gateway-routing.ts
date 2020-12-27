@@ -1,3 +1,6 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
 import * as cdk from "@aws-cdk/core";
 import {Construct, StackProps} from "@aws-cdk/core";
 import * as networkDemo from "../../../lib/index";
@@ -40,7 +43,7 @@ export class TransitGatewayRoutingStack extends cdk.Stack {
 
 const app = new cdk.App();
 
-new TransitGatewayRoutingStack(app, 'NetworkSegmentationRouting', {
+new TransitGatewayRoutingStack(app, 'TransitGatewayPeeringRouting', {
     env: {
         region: process.env.AWS_DEFAULT_REGION
     },

@@ -1,6 +1,7 @@
 {
-  "name": "network-segmentation",
-  "version": "0.1.0",
+  "name": "transit-gateway-inter-region-peering",
+  "version": "1.0.0",
+  "license": "MIT-0",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
@@ -9,21 +10,21 @@
     "test": "jest"
   },
   "devDependencies": {
-    "@aws-cdk/assert": "1.79.0",
-    "@types/jest": "^26.0.10",
-    "@types/node": "10.17.27",
-    "jest": "^26.4.2",
-    "ts-jest": "^26.2.0",
-    "typescript": "~3.9.7"
+    "@aws-cdk/assert": "1.126.0",
+    "@types/jest": "^27.0.2",
+    "@types/node": "16.10.3",
+    "jest": "^27.2.4",
+    "ts-jest": "^27.0.5",
+    "typescript": "~4.4.3"
   },
   "peerDependencies": {
-    "@aws-cdk/core": "1.79.0"
+    "@aws-cdk/core": "1.126.0"
   },
   "dependencies": {
-    "@aws-cdk/aws-ec2": "1.79.0",
-    "@aws-cdk/aws-iam": "1.79.0",
-    "@aws-cdk/aws-networkmanager": "1.79.0",
-    "@aws-cdk/core": "1.79.0",
-    "uuidv4": "^6.2.6"
+    "@aws-cdk/aws-ec2": "1.126.0",
+    "@aws-cdk/aws-iam": "1.126.0",
+    "@aws-cdk/aws-networkmanager": "1.126.0",
+    "@aws-cdk/core": "1.126.0",
+    "uuidv4": "^6.2.12"
   }
 }

@@ -1,12 +1,15 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
 import * as cdk from '@aws-cdk/core';
 import * as networkDemo from "../lib";
 
 
 const params = require("../bin/data/params.json")
 
-test('Network Segmentation using TGW and Site-to-Site VPN is created', () => {
+test('TGW Inter-Region Peering and Site-to-Site VPN is created', () => {
     const app = new cdk.App();
-    const stack = new cdk.Stack(app, "NetworkingDemoStack", {
+    const stack = new cdk.Stack(app, "TransitGatewayPeeringDemoStack", {
         env: {
             region: "us-east-1"
         }
