@@ -1,3 +1,6 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
 // Core networking resources
 import * as cdk from "@aws-cdk/core";
 import {Construct, StackProps} from "@aws-cdk/core";
@@ -83,9 +86,9 @@ const app = new cdk.App();
 // ========================================================================================
 // Create base stacks
 // ========================================================================================
-new CreateBaseNetworkStack(app, 'NetworkSegmentationDemo', {
+new CreateBaseNetworkStack(app, 'TransitGatewayPeeringDemo', {
     env: {
         region: process.env.AWS_DEFAULT_REGION
     },
-    description: "Builds the base resources for the Network Segmentation Demo"
+    description: "Builds the base resources for the Transit Gateway Peering Demo"
 });

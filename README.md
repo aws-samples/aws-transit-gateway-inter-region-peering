@@ -1,4 +1,4 @@
-# Network Segmentation using Transit Gateway
+# Transit Gateway Inter-Region Peering using CDK
 
 ## Summary
 We will build a global network with development, production and on-prem networks in `us-east-1` and `eu-west-1`. The infrastructure will be built using a combination of CDK, AWS CLI and AWS Console.
@@ -18,13 +18,17 @@ Below routes are allowed by this architecture
 
 ## Architecture
 
-![Architecture](images/Networking-Builder-Project.jpg)
+![Architecture](images/Architecture.jpg)
 
-## Install pre-requisites
-```
-brew install jq
-npm i -g -f aws-cdk@1.79.0
-```
+## Pre-requisites
+* Install the following
+  ```
+  brew install jq
+  npm i -g -f aws-cdk@1.126.0
+  ```
+* You have configured AWS CLI using `aws configure`
+* The role being used from CLI has the permissions required for resources being created by CDK
+* The CDK params are stored [here](bin/data/params.json). Update them if needed.
 
 ## Build the construct
 ```
@@ -33,14 +37,8 @@ npm run build
 npm run test
 ```
 
-## Pre-requisites
-* You have configured AWS CLI using `aws configure`
-* You have the set the `AWS_REGION` within `aws configure`
-* The role being used from CLI has the permissions required for resources being created by CDK
-* The CDK params are stored [here](bin/data/params.json). Update them if needed.
-
-## Build the core network stack
-Here we build the below resources
+## Build the stack
+Here we build the below resources -
 
 * On-prem CIDR for the site-to-site VPN setup
 * EIP for the site-to-site VPN
@@ -58,9 +56,10 @@ Here we build the below resources
 * TransitGateway association and propagation
 * Global network for visualize the traffic using route analyzer
 
-The script will build the stack in `us-east-1` and `eu-west-1`
+The script will build the stack in `us-east-1` and `eu-west-1`. 
+If you need to use different regions, please update the [deploy.sh](bin/scripts/deploy.sh)
 
-**Note:** The transit gateway peering is handled in the shell script 
+**Note:** The transit gateway peering and acceptance is handled in the shell script
 
 ```
 ./bin/scripts/deploy.sh
@@ -68,20 +67,28 @@ The script will build the stack in `us-east-1` and `eu-west-1`
 
 ## Setup the Site-to-Site VPN
 * Follow the steps provided here - https://github.com/aws-samples/vpn-gateway-strongwswan
-* The previous stack has setup the below pre-requisites 
+* The previous stack has setup the below resources 
     * Transit Gateway
     * Customer Gateway
     * Site-to-Site VPN
     * EIP
 * Below commands will return the EIP allocationID and Transit Gateway ID
-* Use Pre-Shared Key-Based Authentication
+* This demo was tested with Pre-Shared Key-Based Authentication
 
 ```
-aws cloudformation describe-stacks --stack-name NetworkSegmentationDemo --query 'Stacks[*].Outputs[?ExportName==`eipAllocationId`].OutputValue' --output text
-aws cloudformation describe-stacks --stack-name NetworkSegmentationDemo --query 'Stacks[*].Outputs[?ExportName==`TransitGatewayId`].OutputValue' --output text
+export AWS_DEFAULT_REGION=us-east-1
+aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`eipAllocationId`].OutputValue' --output text
+aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`TransitGatewayId`].OutputValue' --output text
+
+export AWS_DEFAULT_REGION=eu-west-1
+aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`eipAllocationId`].OutputValue' --output text
+aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`TransitGatewayId`].OutputValue' --output text
+
 ```
 
 **Note:** You can verify the traffic flow using the Route Analyzer from Global Network
+
+![Route-Analyzer](images/Route-Analyzer.png)
 
 ## Cleanup
 

@@ -1,3 +1,6 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
 import * as cdk from "@aws-cdk/core";
 import {CfnTransitGateway, IVpc} from "@aws-cdk/aws-ec2";
 import ec2 = require('@aws-cdk/aws-ec2');

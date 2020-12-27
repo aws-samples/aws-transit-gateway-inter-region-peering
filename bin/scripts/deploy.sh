@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+######################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved. #
+# SPDX-License-Identifier: MIT-0                                     #
+######################################################################
+
 GREEN="\033[1;32m"
 YELLOW="\033[1;33m"
 
@@ -20,9 +25,9 @@ echo -e "${GREEN}Start peering the transit gateways..."
 echo -e "${GREEN}Initiating peering..."
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 export AWS_DEFAULT_REGION=eu-west-1
-export PEER_TGW_ID=$(aws cloudformation describe-stacks --stack-name NetworkSegmentationDemo --query 'Stacks[*].Outputs[?ExportName==`TransitGatewayId`].OutputValue' --output text)
+export PEER_TGW_ID=$(aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`TransitGatewayId`].OutputValue' --output text)
 export AWS_DEFAULT_REGION=us-east-1
-export TGW_ID=$(aws cloudformation describe-stacks --stack-name NetworkSegmentationDemo --query 'Stacks[*].Outputs[?ExportName==`TransitGatewayId`].OutputValue' --output text)
+export TGW_ID=$(aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`TransitGatewayId`].OutputValue' --output text)
 export PEER_REGION=eu-west-1
 aws ec2 create-transit-gateway-peering-attachment \
     --transit-gateway-id $TGW_ID \
@@ -33,7 +38,7 @@ aws ec2 create-transit-gateway-peering-attachment \
 PEER_STATE=$(aws ec2 describe-transit-gateway-peering-attachments --filters Name=transit-gateway-id,Values=$TGW_ID Name=state,Values=initiatingRequest,pendingAcceptance,pending,available --query 'TransitGatewayPeeringAttachments[*].State' --output text | xargs)
 
 # Wait till the attachment status is pendingAcceptance - 10 seconds delay before each check
-while [ $PEER_STATE != "pendingAcceptance" ];
+while [ "$PEER_STATE" != "pendingAcceptance" ];
 do
    sleep 10
    PEER_STATE=$(aws ec2 describe-transit-gateway-peering-attachments --filters Name=transit-gateway-id,Values=$TGW_ID Name=state,Values=initiatingRequest,pendingAcceptance,pending,available --query 'TransitGatewayPeeringAttachments[*].State' --output text | xargs)
@@ -51,7 +56,7 @@ export AWS_DEFAULT_REGION=us-east-1
 PEER_STATE=$(aws ec2 describe-transit-gateway-peering-attachments --filters Name=transit-gateway-id,Values=$TGW_ID Name=state,Values=initiatingRequest,pendingAcceptance,pending,available --query 'TransitGatewayPeeringAttachments[*].State' --output text | xargs)
 
 # Wait till the attachment status is available - 10 seconds delay before each check
-while [ $PEER_STATE != "available" ];
+while [ "$PEER_STATE" != "available" ];
 do
    sleep 10
    PEER_STATE=$(aws ec2 describe-transit-gateway-peering-attachments --filters Name=transit-gateway-id,Values=$TGW_ID Name=state,Values=initiatingRequest,pendingAcceptance,pending,available --query 'TransitGatewayPeeringAttachments[*].State' --output text | xargs)
@@ -68,22 +73,22 @@ echo -e "${GREEN}Completed transit gateway inter-region peering..."
 echo -e "${GREEN}Start building the transit gateway routing...."
 
 export AWS_DEFAULT_REGION=us-east-1
-export TGW_ID=$(aws cloudformation describe-stacks --stack-name NetworkSegmentationDemo --query 'Stacks[*].Outputs[?ExportName==`TransitGatewayId`].OutputValue' --output text)
-export DEVELOPMENT_VPC_ATTACHMENT_ID=$(aws cloudformation describe-stacks --stack-name NetworkSegmentationDemo --query 'Stacks[*].Outputs[?ExportName==`DevelopmentTGWAttachmentId`].OutputValue' --output text)
-export DEVELOPMENT_VPC_ROUTE_TABLE_ID=$(aws cloudformation describe-stacks --stack-name NetworkSegmentationDemo --query 'Stacks[*].Outputs[?ExportName==`DevelopmentTGWRouteTableId`].OutputValue' --output text)
-export PRODUCTION_VPC_ATTACHMENT_ID=$(aws cloudformation describe-stacks --stack-name NetworkSegmentationDemo --query 'Stacks[*].Outputs[?ExportName==`ProductionTGWAttachmentId`].OutputValue' --output text)
-export PRODUCTION_VPC_ROUTE_TABLE_ID=$(aws cloudformation describe-stacks --stack-name NetworkSegmentationDemo --query 'Stacks[*].Outputs[?ExportName==`ProductionTGWRouteTableId`].OutputValue' --output text)
+export TGW_ID=$(aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`TransitGatewayId`].OutputValue' --output text)
+export DEVELOPMENT_VPC_ATTACHMENT_ID=$(aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`DevelopmentTGWAttachmentId`].OutputValue' --output text)
+export DEVELOPMENT_VPC_ROUTE_TABLE_ID=$(aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`DevelopmentTGWRouteTableId`].OutputValue' --output text)
+export PRODUCTION_VPC_ATTACHMENT_ID=$(aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`ProductionTGWAttachmentId`].OutputValue' --output text)
+export PRODUCTION_VPC_ROUTE_TABLE_ID=$(aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`ProductionTGWRouteTableId`].OutputValue' --output text)
 export PEER_ATTACHMENT_ID=$(aws ec2 describe-transit-gateway-attachments --filters Name=resource-type,Values=peering Name=transit-gateway-id,Values=$TGW_ID Name=state,Values=available --query 'TransitGatewayAttachments[*].TransitGatewayAttachmentId' --output text)
 export VPN_ATTACHMENT_ID=$(aws ec2 describe-transit-gateway-attachments --filters Name=resource-type,Values=vpn Name=transit-gateway-id,Values=$TGW_ID Name=state,Values=available --query 'TransitGatewayAttachments[*].TransitGatewayAttachmentId' --output text)
 
 cdk --app "npx ts-node bin/stacks/lib/transit-gateway-routing.ts" deploy --require-approval never
 
 export AWS_DEFAULT_REGION=eu-west-1
-export TGW_ID=$(aws cloudformation describe-stacks --stack-name NetworkSegmentationDemo --query 'Stacks[*].Outputs[?ExportName==`TransitGatewayId`].OutputValue' --output text)
-export DEVELOPMENT_VPC_ATTACHMENT_ID=$(aws cloudformation describe-stacks --stack-name NetworkSegmentationDemo --query 'Stacks[*].Outputs[?ExportName==`DevelopmentTGWAttachmentId`].OutputValue' --output text)
-export DEVELOPMENT_VPC_ROUTE_TABLE_ID=$(aws cloudformation describe-stacks --stack-name NetworkSegmentationDemo --query 'Stacks[*].Outputs[?ExportName==`DevelopmentTGWRouteTableId`].OutputValue' --output text)
-export PRODUCTION_VPC_ATTACHMENT_ID=$(aws cloudformation describe-stacks --stack-name NetworkSegmentationDemo --query 'Stacks[*].Outputs[?ExportName==`ProductionTGWAttachmentId`].OutputValue' --output text)
-export PRODUCTION_VPC_ROUTE_TABLE_ID=$(aws cloudformation describe-stacks --stack-name NetworkSegmentationDemo --query 'Stacks[*].Outputs[?ExportName==`ProductionTGWRouteTableId`].OutputValue' --output text)
+export TGW_ID=$(aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`TransitGatewayId`].OutputValue' --output text)
+export DEVELOPMENT_VPC_ATTACHMENT_ID=$(aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`DevelopmentTGWAttachmentId`].OutputValue' --output text)
+export DEVELOPMENT_VPC_ROUTE_TABLE_ID=$(aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`DevelopmentTGWRouteTableId`].OutputValue' --output text)
+export PRODUCTION_VPC_ATTACHMENT_ID=$(aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`ProductionTGWAttachmentId`].OutputValue' --output text)
+export PRODUCTION_VPC_ROUTE_TABLE_ID=$(aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`ProductionTGWRouteTableId`].OutputValue' --output text)
 export PEER_ATTACHMENT_ID=$(aws ec2 describe-transit-gateway-attachments --filters Name=resource-type,Values=peering Name=transit-gateway-id,Values=$TGW_ID Name=state,Values=available --query 'TransitGatewayAttachments[*].TransitGatewayAttachmentId' --output text)
 export VPN_ATTACHMENT_ID=$(aws ec2 describe-transit-gateway-attachments --filters Name=resource-type,Values=vpn Name=transit-gateway-id,Values=$TGW_ID Name=state,Values=available --query 'TransitGatewayAttachments[*].TransitGatewayAttachmentId' --output text)
 
@@ -98,10 +103,10 @@ echo -e "${GREEN}Completed the transit gateway routing...."
 echo -e "${GREEN}Start building the global network...."
 
 export AWS_DEFAULT_REGION=us-east-1
-export US_TGW_ID=$(aws cloudformation describe-stacks --stack-name NetworkSegmentationDemo --query 'Stacks[*].Outputs[?ExportName==`TransitGatewayId`].OutputValue' --output text)
+export US_TGW_ID=$(aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`TransitGatewayId`].OutputValue' --output text)
 export US_TGW_ARN=$(aws ec2 describe-transit-gateways --transit-gateway-ids $US_TGW_ID --query 'TransitGateways[*].TransitGatewayArn' --output text)
 export AWS_DEFAULT_REGION=eu-west-1
-export EU_TGW_ID=$(aws cloudformation describe-stacks --stack-name NetworkSegmentationDemo --query 'Stacks[*].Outputs[?ExportName==`TransitGatewayId`].OutputValue' --output text)
+export EU_TGW_ID=$(aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`TransitGatewayId`].OutputValue' --output text)
 export EU_TGW_ARN=$(aws ec2 describe-transit-gateways --transit-gateway-ids $EU_TGW_ID --query 'TransitGateways[*].TransitGatewayArn' --output text)
 export AWS_DEFAULT_REGION=us-east-1
 
