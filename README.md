@@ -1,6 +1,17 @@
 # Transit Gateway Inter-Region Peering using CDK
 
-## Summary
+#### Table of Contents
+
+* [Outcome](#Outcome)
+* [What are we building?](#what-are-we-building)
+* [What are the pre-requisites?](#what-are-the-pre-requisites)
+* [How can I deploy the stack?](#how-can-i-deploy-the-stack)
+* [Can I setup site-to-site VPN?](#can-i-setup-site-to-site-vpn)
+* [Let's cleanup](#lets-cleanup)
+* [Security](#security)
+* [License](#license)
+
+## Outcome
 We will build a global network with development, production and on-prem networks in `us-east-1` and `eu-west-1`. The infrastructure will be built using a combination of CDK, AWS CLI and AWS Console.
 
 Below routes are allowed by this architecture
@@ -16,29 +27,28 @@ Below routes are allowed by this architecture
 
 **Note:** For the on-prem simulation, we will leverage the aws-samples - https://github.com/aws-samples/vpn-gateway-strongwswan
 
-## Architecture
+## What are we building?
 
 ![Architecture](images/Architecture.jpg)
 
-## Pre-requisites
+## What are the pre-requisites?
 * Install the following
-  ```
+  ```shell
   brew install jq
   npm i -g -f aws-cdk@1.126.0
   ```
 * You have configured AWS CLI using `aws configure`
 * The role being used from CLI has the permissions required for resources being created by CDK
 * The CDK params are stored [here](bin/data/params.json). Update them if needed.
+* Let's build the code
+  ```shell
+  npm install
+  npm run build
+  npm run test
+  ```
 
-## Build the construct
-```
-npm install
-npm run build
-npm run test
-```
-
-## Build the stack
-Here we build the below resources -
+## How can I deploy the stack?
+We build the below resources -
 
 * On-prem CIDR for the site-to-site VPN setup
 * EIP for the site-to-site VPN
@@ -61,11 +71,11 @@ If you need to use different regions, please update the [deploy.sh](bin/scripts/
 
 **Note:** The transit gateway peering and acceptance is handled in the shell script
 
-```
+```shell
 ./bin/scripts/deploy.sh
 ```
 
-## Setup the Site-to-Site VPN
+## Can I setup site-to-site VPN?
 * Follow the steps provided here - https://github.com/aws-samples/vpn-gateway-strongwswan
 * The previous stack has setup the below resources 
     * Transit Gateway
@@ -75,7 +85,7 @@ If you need to use different regions, please update the [deploy.sh](bin/scripts/
 * Below commands will return the EIP allocationID and Transit Gateway ID
 * This demo was tested with Pre-Shared Key-Based Authentication
 
-```
+```shell
 export AWS_DEFAULT_REGION=us-east-1
 aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`eipAllocationId`].OutputValue' --output text
 aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`TransitGatewayId`].OutputValue' --output text
@@ -90,8 +100,17 @@ aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --quer
 
 ![Route-Analyzer](images/Route-Analyzer.png)
 
-## Cleanup
+## Let's cleanup
 
-```
+```shell
 ./bin/scripts/destroy.sh
 ```
+
+# Security
+
+See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+
+# License
+
+This library is licensed under the MIT-0 License. See the [LICENSE](LICENSE) file.
+
