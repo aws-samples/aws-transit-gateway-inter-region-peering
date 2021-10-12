@@ -6,7 +6,7 @@
 * [What are we building?](#what-are-we-building)
 * [What are the pre-requisites?](#what-are-the-pre-requisites)
 * [How can I deploy the stack?](#how-can-i-deploy-the-stack)
-* [Can I setup site-to-site VPN?](#can-i-setup-site-to-site-vpn)
+* [How can I setup a site-to-site VPN?](#how-can-i-setup-a-site-to-site-vpn)
 * [Let's cleanup](#lets-cleanup)
 * [Security](#security)
 * [License](#license)
@@ -75,7 +75,7 @@ If you need to use different regions, please update the [deploy.sh](bin/scripts/
 ./bin/scripts/deploy.sh
 ```
 
-## Can I setup site-to-site VPN?
+## How can I setup a site-to-site VPN?
 * Follow the steps provided here - https://github.com/aws-samples/vpn-gateway-strongwswan
 * The previous stack has setup the below resources 
     * Transit Gateway
