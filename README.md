@@ -12,7 +12,10 @@
 * [License](#license)
 
 ## Outcome
-We will build a global network with development, production and on-prem networks in `us-east-1` and `eu-west-1`. The infrastructure will be built using a combination of CDK, AWS CLI and AWS Console.
+
+We will build a global network with development, production and on-prem networks in `us-east-1`
+and `eu-west-1`. The infrastructure will be built using a combination of CDK, AWS CLI and AWS
+Console.
 
 Below routes are allowed by this architecture
 
@@ -25,17 +28,20 @@ Below routes are allowed by this architecture
 | DevelopmentEU | CorpEU        |
 | ProductionEU  | CorpEU        |
 
-**Note:** For the on-prem simulation, we will leverage the aws-samples - https://github.com/aws-samples/vpn-gateway-strongwswan
+**Note:** For the on-prem simulation, we will leverage the aws-samples
+
+- https://github.com/aws-samples/vpn-gateway-strongwswan
 
 ## What are we building?
 
 ![Architecture](images/Architecture.jpg)
 
 ## What are the pre-requisites?
+
 * Install the following
   ```shell
   brew install jq
-  npm i -g -f aws-cdk@1.126.0
+  npm i -g -f aws-cdk@1.157.0
   ```
 * You have configured AWS CLI using `aws configure`
 * The role being used from CLI has the permissions required for resources being created by CDK
@@ -48,6 +54,7 @@ Below routes are allowed by this architecture
   ```
 
 ## How can I deploy the stack?
+
 We build the below resources -
 
 * On-prem CIDR for the site-to-site VPN setup
@@ -66,7 +73,7 @@ We build the below resources -
 * TransitGateway association and propagation
 * Global network for visualize the traffic using route analyzer
 
-The script will build the stack in `us-east-1` and `eu-west-1`. 
+The script will build the stack in `us-east-1` and `eu-west-1`.
 If you need to use different regions, please update the [deploy.sh](bin/scripts/deploy.sh)
 
 **Note:** The transit gateway peering and acceptance is handled in the shell script
@@ -76,8 +83,9 @@ If you need to use different regions, please update the [deploy.sh](bin/scripts/
 ```
 
 ## How can I setup a site-to-site VPN?
+
 * Follow the steps provided here - https://github.com/aws-samples/vpn-gateway-strongwswan
-* The previous stack has setup the below resources 
+* The previous stack has set up the below resources
     * Transit Gateway
     * Customer Gateway
     * Site-to-Site VPN
