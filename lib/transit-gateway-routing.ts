@@ -1,13 +1,13 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import * as cdk from '@aws-cdk/core'
 import {
     CfnTransitGatewayRoute,
     CfnTransitGatewayRouteTable,
     CfnTransitGatewayRouteTableAssociation,
     CfnTransitGatewayRouteTablePropagation
-} from "@aws-cdk/aws-ec2";
+} from 'aws-cdk-lib/aws-ec2';
+import {Construct} from 'constructs';
 
 export interface StaticRouteProps {
     readonly destination?: string;
@@ -36,83 +36,83 @@ export interface TransitGatewayRoutingProps {
     readonly peeringInfo?: TgwPeeringRoutingProps;
 }
 
-export class TransitGatewayRouting extends cdk.Construct {
+export class TransitGatewayRouting extends Construct {
 
-    constructor(scope: cdk.Construct, id: string, props: TransitGatewayRoutingProps = {}) {
+    constructor(scope: Construct, id: string, props: TransitGatewayRoutingProps = {}) {
         super(scope, id);
 
         // Create the routing table, association and propagation for TGW-VPN
-        const vpnTransitGatewayRTB = new CfnTransitGatewayRouteTable(this, "VPN", {
+        const vpnTransitGatewayRTB = new CfnTransitGatewayRouteTable(this, 'VPN', {
             transitGatewayId: props.transitGatewayId!,
             tags: [
                 {
-                    key: "Name",
-                    value: "VPNRouteTable"
+                    key: 'Name',
+                    value: 'VPNRouteTable'
                 }
             ]
         });
-        new CfnTransitGatewayRouteTableAssociation(this, "VPNAssociation", {
+        new CfnTransitGatewayRouteTableAssociation(this, 'VPNAssociation', {
             transitGatewayAttachmentId: props.vpnInfo!.vpnAttachmentId!,
             transitGatewayRouteTableId: vpnTransitGatewayRTB.ref
         });
-        new CfnTransitGatewayRouteTablePropagation(this, "VPNPropagation", {
+        new CfnTransitGatewayRouteTablePropagation(this, 'VPNPropagation', {
             transitGatewayAttachmentId: props.vpnInfo!.vpnAttachmentId!,
             transitGatewayRouteTableId: vpnTransitGatewayRTB.ref
         });
 
         // Propagate the Development and Production attachments with TGW-VPN RouteTable
-        new CfnTransitGatewayRouteTablePropagation(this, "VPNDevelopmentPropagation", {
+        new CfnTransitGatewayRouteTablePropagation(this, 'VPNDevelopmentPropagation', {
             transitGatewayAttachmentId: props.developmentVpcInfo!.vpcAttachmentId!,
             transitGatewayRouteTableId: vpnTransitGatewayRTB.ref
         });
-        new CfnTransitGatewayRouteTablePropagation(this, "VPNProductionPropagation", {
+        new CfnTransitGatewayRouteTablePropagation(this, 'VPNProductionPropagation', {
             transitGatewayAttachmentId: props.productionVpcInfo!.vpcAttachmentId!,
             transitGatewayRouteTableId: vpnTransitGatewayRTB.ref
         });
 
         // Propagate the VPN attachment for Development and Production TGW-VPC RouteTable
-        new CfnTransitGatewayRouteTablePropagation(this, "DevelopmentVPNPropagation", {
+        new CfnTransitGatewayRouteTablePropagation(this, 'DevelopmentVPNPropagation', {
             transitGatewayAttachmentId: props.vpnInfo!.vpnAttachmentId!,
             transitGatewayRouteTableId: props.developmentVpcInfo!.vpcRouteTableId!
         });
-        new CfnTransitGatewayRouteTablePropagation(this, "ProductionVPNPropagation", {
+        new CfnTransitGatewayRouteTablePropagation(this, 'ProductionVPNPropagation', {
             transitGatewayAttachmentId: props.vpnInfo!.vpnAttachmentId!,
             transitGatewayRouteTableId: props.productionVpcInfo!.vpcRouteTableId!
         });
 
         // Add the static route for Development and Production TGW-VPC RouteTable
-        new CfnTransitGatewayRoute(this, "DevelopmentStaticRoute", {
+        new CfnTransitGatewayRoute(this, 'DevelopmentStaticRoute', {
             transitGatewayAttachmentId: props.peeringInfo!.peeringAttachmentId!,
             destinationCidrBlock: props.developmentVpcInfo!.staticRoutes!.destination!,
             transitGatewayRouteTableId: props.developmentVpcInfo!.vpcRouteTableId!
         });
-        new CfnTransitGatewayRoute(this, "ProductionStaticRoute", {
+        new CfnTransitGatewayRoute(this, 'ProductionStaticRoute', {
             transitGatewayAttachmentId: props.peeringInfo!.peeringAttachmentId!,
             destinationCidrBlock: props.productionVpcInfo!.staticRoutes!.destination!,
             transitGatewayRouteTableId: props.productionVpcInfo!.vpcRouteTableId!
         });
 
         // Create the routing table, association and propagation for TGW-PEER
-        const transitGatewayPeerRTB = new CfnTransitGatewayRouteTable(this, "TGWPeer", {
+        const transitGatewayPeerRTB = new CfnTransitGatewayRouteTable(this, 'TGWPeer', {
             transitGatewayId: props.transitGatewayId!,
             tags: [
                 {
-                    key: "Name",
-                    value: "TGWPeerRouteTable"
+                    key: 'Name',
+                    value: 'TGWPeerRouteTable'
                 }
             ]
         });
-        new CfnTransitGatewayRouteTableAssociation(this, "TGWPeerAssociation", {
+        new CfnTransitGatewayRouteTableAssociation(this, 'TGWPeerAssociation', {
             transitGatewayAttachmentId: props.peeringInfo!.peeringAttachmentId!,
             transitGatewayRouteTableId: transitGatewayPeerRTB.ref
         });
 
         // Propagate the Development and Production attachments for TGW-PEER RouteTable
-        new CfnTransitGatewayRouteTablePropagation(this, "PeerDevelopmentPropagation", {
+        new CfnTransitGatewayRouteTablePropagation(this, 'PeerDevelopmentPropagation', {
             transitGatewayAttachmentId: props.developmentVpcInfo!.vpcAttachmentId!,
             transitGatewayRouteTableId: transitGatewayPeerRTB.ref
         });
-        new CfnTransitGatewayRouteTablePropagation(this, "PeerProductionPropagation", {
+        new CfnTransitGatewayRouteTablePropagation(this, 'PeerProductionPropagation', {
             transitGatewayAttachmentId: props.productionVpcInfo!.vpcAttachmentId!,
             transitGatewayRouteTableId: transitGatewayPeerRTB.ref
         });

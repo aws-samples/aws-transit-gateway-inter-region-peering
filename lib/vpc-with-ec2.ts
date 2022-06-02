@@ -1,25 +1,31 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import * as cdk from "@aws-cdk/core";
-import {CfnOutput} from "@aws-cdk/core";
+import {CfnOutput} from 'aws-cdk-lib';
 import {
     AmazonLinuxCpuType,
     AmazonLinuxGeneration,
+    AmazonLinuxImage,
     CfnTransitGateway,
     CfnTransitGatewayAttachment,
     CfnTransitGatewayRouteTable,
+    CfnTransitGatewayRouteTableAssociation,
+    CfnTransitGatewayRouteTablePropagation,
+    Instance,
     InstanceClass,
     InstanceSize,
     InstanceType,
+    InterfaceVpcEndpoint,
     InterfaceVpcEndpointAwsService,
     IVpc,
+    Peer,
     Port,
     SecurityGroup,
-    SubnetType
-} from "@aws-cdk/aws-ec2";
-import {IRole} from "@aws-cdk/aws-iam";
-import ec2 = require('@aws-cdk/aws-ec2');
+    SubnetType,
+    Vpc
+} from 'aws-cdk-lib/aws-ec2';
+import {IRole} from 'aws-cdk-lib/aws-iam';
+import {Construct} from 'constructs';
 
 export interface VpcWithEc2Props {
     readonly prefix?: string;
@@ -29,7 +35,7 @@ export interface VpcWithEc2Props {
     readonly ec2Role?: IRole;
 }
 
-export class VpcWithEc2 extends cdk.Construct {
+export class VpcWithEc2 extends Construct {
 
     public readonly vpc: IVpc;
     public readonly securityGroup: SecurityGroup;
@@ -37,12 +43,12 @@ export class VpcWithEc2 extends cdk.Construct {
     public readonly cfnTransitGatewayAttachment: CfnTransitGatewayAttachment
     public readonly cfnTransitGatewayRouteTable: CfnTransitGatewayRouteTable
 
-    constructor(scope: cdk.Construct, id: string, props: VpcWithEc2Props = {}) {
+    constructor(scope: Construct, id: string, props: VpcWithEc2Props = {}) {
 
         super(scope, id);
 
         // Create the VPC with ISOLATED subnets
-        this.vpc = new ec2.Vpc(this, props.prefix!.concat('-VPC').toString(), {
+        this.vpc = new Vpc(this, props.prefix!.concat('-VPC').toString(), {
             cidr: props.cidr,
             maxAzs: 3,
             subnetConfiguration: [
@@ -57,15 +63,15 @@ export class VpcWithEc2 extends cdk.Construct {
         this.vpc.isolatedSubnets.forEach(subnet => this.subnetIds.push(subnet.subnetId));
 
         // SecurityGroup for the EC2 instance
-        this.securityGroup = new ec2.SecurityGroup(this, props.prefix!.concat('-SG').toString(), {
+        this.securityGroup = new SecurityGroup(this, props.prefix!.concat('-SG').toString(), {
             vpc: this.vpc,
-            description: "Allow ICMP ping and HTTPS"
+            description: 'Allow ICMP ping and HTTPS'
         });
-        this.securityGroup.addIngressRule(ec2.Peer.anyIpv4(), Port.icmpPing(), "Allow ICMP");
-        this.securityGroup.addIngressRule(ec2.Peer.anyIpv4(), Port.tcp(443), "Allow HTTPS");
+        this.securityGroup.addIngressRule(Peer.anyIpv4(), Port.icmpPing(), 'Allow ICMP');
+        this.securityGroup.addIngressRule(Peer.anyIpv4(), Port.tcp(443), 'Allow HTTPS');
 
         // Create the VPC Interface Endpoints
-        new ec2.InterfaceVpcEndpoint(this, props.prefix!.concat('-SSM').toString(), {
+        new InterfaceVpcEndpoint(this, props.prefix!.concat('-SSM').toString(), {
             service: InterfaceVpcEndpointAwsService.SSM,
             vpc: this.vpc,
             privateDnsEnabled: true,
@@ -74,7 +80,7 @@ export class VpcWithEc2 extends cdk.Construct {
                 subnetType: SubnetType.ISOLATED
             })
         });
-        new ec2.InterfaceVpcEndpoint(this, props.prefix!.concat('-SSM_MESSAGES').toString(), {
+        new InterfaceVpcEndpoint(this, props.prefix!.concat('-SSM_MESSAGES').toString(), {
             service: InterfaceVpcEndpointAwsService.SSM_MESSAGES,
             vpc: this.vpc,
             privateDnsEnabled: true,
@@ -83,7 +89,7 @@ export class VpcWithEc2 extends cdk.Construct {
                 subnetType: SubnetType.ISOLATED
             })
         });
-        new ec2.InterfaceVpcEndpoint(this, props.prefix!.concat('-EC2').toString(), {
+        new InterfaceVpcEndpoint(this, props.prefix!.concat('-EC2').toString(), {
             service: InterfaceVpcEndpointAwsService.EC2,
             vpc: this.vpc,
             privateDnsEnabled: true,
@@ -92,7 +98,7 @@ export class VpcWithEc2 extends cdk.Construct {
                 subnetType: SubnetType.ISOLATED
             })
         });
-        new ec2.InterfaceVpcEndpoint(this, props.prefix!.concat('-EC2_MESSAGES').toString(), {
+        new InterfaceVpcEndpoint(this, props.prefix!.concat('-EC2_MESSAGES').toString(), {
             service: InterfaceVpcEndpointAwsService.EC2_MESSAGES,
             vpc: this.vpc,
             privateDnsEnabled: true,
@@ -103,43 +109,43 @@ export class VpcWithEc2 extends cdk.Construct {
         });
 
         // Create a EC2 instance
-        new ec2.Instance(this, props.prefix!.concat("-Instance").toString(), {
+        new Instance(this, props.prefix!.concat('-Instance').toString(), {
             instanceType: InstanceType.of(InstanceClass.T2, InstanceSize.MICRO),
             role: props.ec2Role,
             vpc: this.vpc,
             securityGroup: this.securityGroup,
-            machineImage: new ec2.AmazonLinuxImage({
+            machineImage: new AmazonLinuxImage({
                 cpuType: AmazonLinuxCpuType.X86_64,
                 generation: AmazonLinuxGeneration.AMAZON_LINUX_2
             })
         });
 
         // Create a transit gateway route table
-        this.cfnTransitGatewayRouteTable = new ec2.CfnTransitGatewayRouteTable(this, props.prefix!.concat("-RouteTable").toString(), {
+        this.cfnTransitGatewayRouteTable = new CfnTransitGatewayRouteTable(this, props.prefix!.concat('-RouteTable').toString(), {
             transitGatewayId: props.transitGateway!.ref,
             tags: [
                 {
-                    key: "Name",
-                    value: props.prefix!.concat("-RouteTable").toString()
+                    key: 'Name',
+                    value: props.prefix!.concat('-RouteTable').toString()
                 }
             ]
         });
 
         // // Create a transit gateway attachment
-        this.cfnTransitGatewayAttachment = new ec2.CfnTransitGatewayAttachment(this, props.prefix!.concat("-Attachment").toString(), {
+        this.cfnTransitGatewayAttachment = new CfnTransitGatewayAttachment(this, props.prefix!.concat('-Attachment').toString(), {
             transitGatewayId: props.transitGateway!.ref,
             vpcId: this.vpc.vpcId,
             subnetIds: this.subnetIds,
             tags: [
                 {
-                    key: "Name",
-                    value: props.prefix!.concat("-Attachment").toString()
+                    key: 'Name',
+                    value: props.prefix!.concat('-Attachment').toString()
                 }
             ]
         });
 
         // Create a transit gateway association
-        const cfnTransitGatewayRouteTableAssociation = new ec2.CfnTransitGatewayRouteTableAssociation(this, props.prefix!.concat("-RouteTableAssociation").toString(), {
+        const cfnTransitGatewayRouteTableAssociation = new CfnTransitGatewayRouteTableAssociation(this, props.prefix!.concat('-RouteTableAssociation').toString(), {
             transitGatewayRouteTableId: this.cfnTransitGatewayRouteTable.ref,
             transitGatewayAttachmentId: this.cfnTransitGatewayAttachment.ref
         });
@@ -147,7 +153,7 @@ export class VpcWithEc2 extends cdk.Construct {
         cfnTransitGatewayRouteTableAssociation.node.addDependency(this.cfnTransitGatewayAttachment);
 
         // Create a transit gateway propagation
-        const cfnTransitGatewayRouteTablePropagation = new ec2.CfnTransitGatewayRouteTablePropagation(this, props.prefix!.concat("-RouteTablePropagation").toString(), {
+        const cfnTransitGatewayRouteTablePropagation = new CfnTransitGatewayRouteTablePropagation(this, props.prefix!.concat('-RouteTablePropagation').toString(), {
             transitGatewayRouteTableId: this.cfnTransitGatewayRouteTable.ref,
             transitGatewayAttachmentId: this.cfnTransitGatewayAttachment.ref
         });
@@ -155,19 +161,19 @@ export class VpcWithEc2 extends cdk.Construct {
         cfnTransitGatewayRouteTablePropagation.node.addDependency(this.cfnTransitGatewayAttachment);
 
         //Outputs
-        new CfnOutput(this, props.prefix!.concat("-VPCId").toString(), {
-            description: "VPCId for the environment",
-            exportName: props.prefix!.concat("VPCId").toString(),
+        new CfnOutput(this, props.prefix!.concat('-VPCId').toString(), {
+            description: 'VPCId for the environment',
+            exportName: props.prefix!.concat('VPCId').toString(),
             value: this.vpc.vpcId
         });
-        new CfnOutput(this, props.prefix!.concat("-TGWAttachmentId").toString(), {
-            description: "TGWAttachmentId for the VPC",
-            exportName: props.prefix!.concat("TGWAttachmentId").toString(),
+        new CfnOutput(this, props.prefix!.concat('-TGWAttachmentId').toString(), {
+            description: 'TGWAttachmentId for the VPC',
+            exportName: props.prefix!.concat('TGWAttachmentId').toString(),
             value: this.cfnTransitGatewayAttachment.ref
         });
-        new CfnOutput(this, props.prefix!.concat("-TGWRouteTableId").toString(), {
-            description: "TGWRouteTableId for the VPC",
-            exportName: props.prefix!.concat("TGWRouteTableId").toString(),
+        new CfnOutput(this, props.prefix!.concat('-TGWRouteTableId').toString(), {
+            description: 'TGWRouteTableId for the VPC',
+            exportName: props.prefix!.concat('TGWRouteTableId').toString(),
             value: this.cfnTransitGatewayRouteTable.ref
         });
     }

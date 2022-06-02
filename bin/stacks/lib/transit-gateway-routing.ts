@@ -1,18 +1,18 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import * as cdk from "@aws-cdk/core";
-import {Construct, StackProps} from "@aws-cdk/core";
-import * as networkDemo from "../../../lib/index";
+import {App, Stack, StackProps} from 'aws-cdk-lib';
+import * as networkDemo from '../../../lib/index';
+import {Construct} from 'constructs';
 
-const cfnParams = require("../../data/params.json")
+const cfnParams = require('../../data/params.json')
 
-export class TransitGatewayRoutingStack extends cdk.Stack {
+export class TransitGatewayRoutingStack extends Stack {
 
     constructor(scope: Construct, id: string, props?: StackProps) {
         super(scope, id, props);
 
-        new networkDemo.TransitGatewayRouting(this, "TransitGatewayRouting", {
+        new networkDemo.TransitGatewayRouting(this, 'TransitGatewayRouting', {
             transitGatewayId: process.env.TGW_ID,
             developmentVpcInfo: {
                 vpcAttachmentId: process.env.DEVELOPMENT_VPC_ATTACHMENT_ID,
@@ -41,12 +41,12 @@ export class TransitGatewayRoutingStack extends cdk.Stack {
 }
 
 
-const app = new cdk.App();
+const app = new App();
 
 new TransitGatewayRoutingStack(app, 'TransitGatewayPeeringRouting', {
     env: {
         region: process.env.AWS_DEFAULT_REGION
     },
-    description: "Builds the transit gateway routing for the Network Segmentation Demo"
+    description: 'Builds the transit gateway routing for the Network Segmentation Demo'
 });
 

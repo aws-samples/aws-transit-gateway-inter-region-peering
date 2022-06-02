@@ -1,6 +1,6 @@
 {
   "name": "transit-gateway-inter-region-peering",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "license": "MIT-0",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -10,21 +10,26 @@
     "test": "jest"
   },
   "devDependencies": {
-    "@aws-cdk/assert": "1.157.0",
-    "@types/jest": "^27.5.1",
-    "@types/node": "17.0.35",
+    "@types/jest": "^28.1.0",
+    "@types/node": "17.0.38",
+    "@types/prettier": "2.6.3",
+    "@typescript-eslint/eslint-plugin": "^5.27.0",
+    "@typescript-eslint/parser": "^5.27.0",
+    "aws-cdk": "2.26.0",
+    "eslint": "^8.16.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.2.1",
+    "eslint-plugin-promise": "^6.0.0",
     "jest": "^28.1.0",
     "ts-jest": "^28.0.3",
+    "ts-node": "^10.8.0",
     "typescript": "~4.7.2"
   },
-  "peerDependencies": {
-    "@aws-cdk/core": "1.157.0"
-  },
   "dependencies": {
-    "@aws-cdk/aws-ec2": "1.157.0",
-    "@aws-cdk/aws-iam": "1.157.0",
-    "@aws-cdk/aws-networkmanager": "1.157.0",
-    "@aws-cdk/core": "1.157.0",
+    "aws-cdk-lib": "2.26.0",
+    "constructs": "^10.1.25",
+    "source-map-support": "^0.5.21",
     "uuidv4": "^6.2.13"
   }
 }
