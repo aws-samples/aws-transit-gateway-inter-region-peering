@@ -41,7 +41,7 @@ Below routes are allowed by this architecture
 * Install the following
   ```shell
   brew install jq
-  npm i -g -f aws-cdk@1.157.0
+  npm i -g -f aws-cdk@2.26.0
   ```
 * You have configured AWS CLI using `aws configure`
 * The role being used from CLI has the permissions required for resources being created by CDK
