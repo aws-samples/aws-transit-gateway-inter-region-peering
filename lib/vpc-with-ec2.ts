@@ -16,7 +16,7 @@ import {
     InstanceSize,
     InstanceType,
     InterfaceVpcEndpoint,
-    InterfaceVpcEndpointAwsService,
+    InterfaceVpcEndpointAwsService, IpAddresses,
     IVpc,
     Peer,
     Port,
@@ -49,13 +49,13 @@ export class VpcWithEc2 extends Construct {
 
         // Create the VPC with ISOLATED subnets
         this.vpc = new Vpc(this, props.prefix!.concat('-VPC').toString(), {
-            cidr: props.cidr,
+            ipAddresses: IpAddresses.cidr(props.cidr!),
             maxAzs: 3,
             subnetConfiguration: [
                 {
                     cidrMask: props.cidrMask,
-                    name: props.prefix!.concat('-VPC | Isolated'),
-                    subnetType: SubnetType.ISOLATED
+                    name: props.prefix!.concat('-VPC | Private Isolated'),
+                    subnetType: SubnetType.PRIVATE_ISOLATED
                 }]
         });
 
@@ -77,7 +77,7 @@ export class VpcWithEc2 extends Construct {
             privateDnsEnabled: true,
             securityGroups: [this.securityGroup],
             subnets: this.vpc.selectSubnets({
-                subnetType: SubnetType.ISOLATED
+                subnetType: SubnetType.PRIVATE_ISOLATED
             })
         });
         new InterfaceVpcEndpoint(this, props.prefix!.concat('-SSM_MESSAGES').toString(), {
@@ -86,7 +86,7 @@ export class VpcWithEc2 extends Construct {
             privateDnsEnabled: true,
             securityGroups: [this.securityGroup],
             subnets: this.vpc.selectSubnets({
-                subnetType: SubnetType.ISOLATED
+                subnetType: SubnetType.PRIVATE_ISOLATED
             })
         });
         new InterfaceVpcEndpoint(this, props.prefix!.concat('-EC2').toString(), {
@@ -95,7 +95,7 @@ export class VpcWithEc2 extends Construct {
             privateDnsEnabled: true,
             securityGroups: [this.securityGroup],
             subnets: this.vpc.selectSubnets({
-                subnetType: SubnetType.ISOLATED
+                subnetType: SubnetType.PRIVATE_ISOLATED
             })
         });
         new InterfaceVpcEndpoint(this, props.prefix!.concat('-EC2_MESSAGES').toString(), {
@@ -104,7 +104,7 @@ export class VpcWithEc2 extends Construct {
             privateDnsEnabled: true,
             securityGroups: [this.securityGroup],
             subnets: this.vpc.selectSubnets({
-                subnetType: SubnetType.ISOLATED
+                subnetType: SubnetType.PRIVATE_ISOLATED
             })
         });
 

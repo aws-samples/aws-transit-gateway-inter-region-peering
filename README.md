@@ -1,3 +1,9 @@
+# Archive Notice
+
+This project is being archived as of Jan 2024. The application has been tested using `CDK 2.122.0` and `NodeJS 18`.
+
+---
+
 # Transit Gateway Inter-Region Peering using CDK
 
 #### Table of Contents
@@ -41,7 +47,7 @@ Below routes are allowed by this architecture
 * Install the following
   ```shell
   brew install jq
-  npm i -g -f aws-cdk@2.26.0
+  npm i -g -f aws-cdk@2.122.0
   ```
 * You have configured AWS CLI using `aws configure`
 * The role being used from CLI has the permissions required for resources being created by CDK

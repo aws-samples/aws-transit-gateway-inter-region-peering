@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT-0
 
 import {CfnOutput, Fn} from 'aws-cdk-lib';
-import {CfnEIP, IVpc, SubnetType, Vpc} from 'aws-cdk-lib/aws-ec2';
+import {CfnEIP, IpAddresses, IVpc, SubnetType, Vpc} from 'aws-cdk-lib/aws-ec2';
 import {Construct} from 'constructs';
 
 export interface SimulatedOnPremProps {
@@ -24,7 +24,7 @@ export class SimulatedOnPrem extends Construct {
 
         // Create the VPC with PUBLIC subnet
         this.vpc = new Vpc(this, props.prefix!.concat('-VPC').toString(), {
-            cidr: props.cidr,
+            ipAddresses: IpAddresses.cidr(props.cidr!),
             maxAzs: 1,
             subnetConfiguration: [
                 {
