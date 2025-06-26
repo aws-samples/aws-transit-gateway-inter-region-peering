@@ -7,14 +7,18 @@
 
 GREEN="\033[1;32m"
 YELLOW="\033[1;33m"
-
+# Silence the warning for supported node releases
+# export JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=1
 ##########################################################################################
 # Base Networking Resources
 ##########################################################################################
 echo -e "${GREEN}Start building the base networking resources...."
+export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 export AWS_DEFAULT_REGION=us-east-1
+cdk bootstrap aws://${AWS_ACCOUNT_ID}/${AWS_DEFAULT_REGION}
 cdk --app "npx ts-node bin/stacks/lib/base-network.ts" deploy --require-approval never
 export AWS_DEFAULT_REGION=eu-west-1
+cdk bootstrap aws://${AWS_ACCOUNT_ID}/${AWS_DEFAULT_REGION}
 cdk --app "npx ts-node bin/stacks/lib/base-network.ts" deploy --require-approval never
 echo -e "${GREEN}Completed the base networking resources...."
 
@@ -99,7 +103,7 @@ echo -e "${GREEN}Completed the transit gateway routing...."
 ##########################################################################################
 # Global Network
 ##########################################################################################
-
+sleep 10
 echo -e "${GREEN}Start building the global network...."
 
 export AWS_DEFAULT_REGION=us-east-1
@@ -108,8 +112,8 @@ export US_TGW_ARN=$(aws ec2 describe-transit-gateways --transit-gateway-ids $US_
 export AWS_DEFAULT_REGION=eu-west-1
 export EU_TGW_ID=$(aws cloudformation describe-stacks --stack-name TransitGatewayPeeringDemo --query 'Stacks[*].Outputs[?ExportName==`TransitGatewayId`].OutputValue' --output text)
 export EU_TGW_ARN=$(aws ec2 describe-transit-gateways --transit-gateway-ids $EU_TGW_ID --query 'TransitGateways[*].TransitGatewayArn' --output text)
-export AWS_DEFAULT_REGION=us-east-1
 
+export AWS_DEFAULT_REGION=us-east-1
 cdk --app "npx ts-node bin/stacks/lib/global-network.ts" deploy --require-approval never
 
 echo -e "${GREEN}Completed the global network...."

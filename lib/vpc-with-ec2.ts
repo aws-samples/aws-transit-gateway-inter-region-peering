@@ -1,7 +1,8 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import {CfnOutput} from 'aws-cdk-lib';
+import { CfnOutput, RemovalPolicy } from 'aws-cdk-lib';
+import { Alarm, ComparisonOperator, Metric, TreatMissingData } from 'aws-cdk-lib/aws-cloudwatch';
 import {
     AmazonLinuxCpuType,
     AmazonLinuxGeneration,
@@ -11,12 +12,16 @@ import {
     CfnTransitGatewayRouteTable,
     CfnTransitGatewayRouteTableAssociation,
     CfnTransitGatewayRouteTablePropagation,
+    FlowLog,
+    FlowLogDestination,
+    FlowLogResourceType,
+    FlowLogTrafficType,
     Instance,
     InstanceClass,
     InstanceSize,
     InstanceType,
     InterfaceVpcEndpoint,
-    InterfaceVpcEndpointAwsService,
+    InterfaceVpcEndpointAwsService, IpAddresses,
     IVpc,
     Peer,
     Port,
@@ -24,8 +29,10 @@ import {
     SubnetType,
     Vpc
 } from 'aws-cdk-lib/aws-ec2';
-import {IRole} from 'aws-cdk-lib/aws-iam';
-import {Construct} from 'constructs';
+import { IRole } from 'aws-cdk-lib/aws-iam';
+import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
+import { Construct } from 'constructs';
+
 
 export interface VpcWithEc2Props {
     readonly prefix?: string;
@@ -49,14 +56,29 @@ export class VpcWithEc2 extends Construct {
 
         // Create the VPC with ISOLATED subnets
         this.vpc = new Vpc(this, props.prefix!.concat('-VPC').toString(), {
-            cidr: props.cidr,
+            ipAddresses: IpAddresses.cidr(props.cidr!),
             maxAzs: 3,
+            enableDnsHostnames: true,
+            enableDnsSupport: true,
             subnetConfiguration: [
                 {
                     cidrMask: props.cidrMask,
-                    name: props.prefix!.concat('-VPC | Isolated'),
-                    subnetType: SubnetType.ISOLATED
+                    name: props.prefix!.concat('-VPC | Private Isolated'),
+                    subnetType: SubnetType.PRIVATE_ISOLATED
                 }]
+        });
+
+        // Enable VPC Flow Logs
+        const flowLogGroup = new LogGroup(this, props.prefix!.concat('-FlowLogs').toString(), {
+            retention: RetentionDays.ONE_MONTH,
+            removalPolicy: RemovalPolicy.DESTROY
+        });
+
+        new FlowLog(this, props.prefix!.concat('-VPCFlowLog').toString(), {
+            resourceType: FlowLogResourceType.fromVpc(this.vpc),
+            destination: FlowLogDestination.toCloudWatchLogs(flowLogGroup),
+            trafficType: FlowLogTrafficType.ALL,
+            flowLogName: props.prefix!.concat('-VPCFlowLog').toString()
         });
 
         // Populate the subnetIDs
@@ -77,7 +99,7 @@ export class VpcWithEc2 extends Construct {
             privateDnsEnabled: true,
             securityGroups: [this.securityGroup],
             subnets: this.vpc.selectSubnets({
-                subnetType: SubnetType.ISOLATED
+                subnetType: SubnetType.PRIVATE_ISOLATED
             })
         });
         new InterfaceVpcEndpoint(this, props.prefix!.concat('-SSM_MESSAGES').toString(), {
@@ -86,7 +108,7 @@ export class VpcWithEc2 extends Construct {
             privateDnsEnabled: true,
             securityGroups: [this.securityGroup],
             subnets: this.vpc.selectSubnets({
-                subnetType: SubnetType.ISOLATED
+                subnetType: SubnetType.PRIVATE_ISOLATED
             })
         });
         new InterfaceVpcEndpoint(this, props.prefix!.concat('-EC2').toString(), {
@@ -95,7 +117,7 @@ export class VpcWithEc2 extends Construct {
             privateDnsEnabled: true,
             securityGroups: [this.securityGroup],
             subnets: this.vpc.selectSubnets({
-                subnetType: SubnetType.ISOLATED
+                subnetType: SubnetType.PRIVATE_ISOLATED
             })
         });
         new InterfaceVpcEndpoint(this, props.prefix!.concat('-EC2_MESSAGES').toString(), {
@@ -104,12 +126,12 @@ export class VpcWithEc2 extends Construct {
             privateDnsEnabled: true,
             securityGroups: [this.securityGroup],
             subnets: this.vpc.selectSubnets({
-                subnetType: SubnetType.ISOLATED
+                subnetType: SubnetType.PRIVATE_ISOLATED
             })
         });
 
         // Create a EC2 instance
-        new Instance(this, props.prefix!.concat('-Instance').toString(), {
+        const ec2Instance = new Instance(this, props.prefix!.concat('-Instance').toString(), {
             instanceType: InstanceType.of(InstanceClass.T2, InstanceSize.MICRO),
             role: props.ec2Role,
             vpc: this.vpc,
@@ -117,7 +139,42 @@ export class VpcWithEc2 extends Construct {
             machineImage: new AmazonLinuxImage({
                 cpuType: AmazonLinuxCpuType.X86_64,
                 generation: AmazonLinuxGeneration.AMAZON_LINUX_2
-            })
+            }),
+            detailedMonitoring: true,
+            requireImdsv2: true
+        });
+
+        // Enable CloudWatch Alarms
+        new Alarm(this, props.prefix!.concat('-HighNetworkIn').toString(), {
+            metric: new Metric({
+                namespace: 'AWS/EC2',
+                metricName: 'NetworkIn',
+                dimensionsMap: {
+                    InstanceId: ec2Instance.instanceId
+                },
+                statistic: 'Average'
+            }),
+            threshold: 1000000000, // 1GB
+            evaluationPeriods: 2,
+            comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+            treatMissingData: TreatMissingData.NOT_BREACHING,
+            alarmDescription: 'High network input detected'
+        });
+
+        new Alarm(this, props.prefix!.concat('-HighCPU').toString(), {
+            metric: new Metric({
+                namespace: 'AWS/EC2',
+                metricName: 'CPUUtilization',
+                dimensionsMap: {
+                    InstanceId: ec2Instance.instanceId
+                },
+                statistic: 'Average'
+            }),
+            threshold: 80,
+            evaluationPeriods: 3,
+            comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+            treatMissingData: TreatMissingData.NOT_BREACHING,
+            alarmDescription: 'High CPU utilization detected'
         });
 
         // Create a transit gateway route table
