@@ -1,3 +1,6 @@
+# Archive Notice
+This project is being archived as of Sep 2025.
+
 # Transit Gateway Inter-Region Peering using CDK
 
 #### Table of Contents
